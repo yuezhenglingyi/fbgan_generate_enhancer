@@ -129,7 +129,7 @@ class ACPClassifier():
 
                 trn_preds = torch.round(y_pred.data)
                 correct = torch.sum(trn_preds == target.data)
-                print_loss_total += loss.data[0]
+                print_loss_total += loss.data.item()
                 total_acc += correct
                 total_overall += self.batch_size
             val_loss, val_acc = self.evaluate_model()
@@ -167,10 +167,10 @@ class ACPClassifier():
             if self.use_gpu: target = target.cuda()
             y_pred, hid = self.rnn(input_batches, hid)
             loss = self.criterion(y_pred, target)
-            total_loss += loss.data[0]
-            y_scores_all[start_idx:(start_idx+self.batch_size)] = y_pred.data
-            target_all[start_idx:(start_idx+self.batch_size)] = target.data
-            y_pred_all[start_idx:(start_idx+self.batch_size)] = torch.round(y_pred.data)
+            total_loss += loss.data.item()
+            y_scores_all[start_idx:(start_idx+self.batch_size)] = y_pred.data.cpu()
+            target_all[start_idx:(start_idx+self.batch_size)] = target.data.cpu()
+            y_pred_all[start_idx:(start_idx+self.batch_size)] = torch.round(y_pred.data.cpu())
         self.rnn.train(True)
         fpr, tpr, thresholds = metrics.roc_curve(target_all, y_scores_all)
         auc = metrics.auc(fpr, tpr)

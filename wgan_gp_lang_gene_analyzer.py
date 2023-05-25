@@ -24,7 +24,8 @@ from sklearn.preprocessing import OneHotEncoder
 import os, math, glob, argparse
 from utils.torch_utils import *
 from utils.utils import *
-from amp_predictor_pytorch import *
+# from amp_predictor_pytorch import *
+from DeepSTARR_predictor import *
 import matplotlib.pyplot as plt
 import utils.language_helpers
 plt.switch_backend('agg')
@@ -32,9 +33,9 @@ import numpy as np
 from models import *
 
 class WGAN_LangGP():
-    def __init__(self, batch_size=64, lr=0.0001, num_epochs=150, seq_len = 156, data_dir='./data/dna_uniprot_under_50_reviewed.fasta', \
-        run_name='test', hidden=512, d_steps = 10, max_examples=2000):
-        self.preds_cutoff = 0.8
+    def __init__(self, batch_size=64, lr=0.0001, num_epochs=250, seq_len = 249, data_dir='./data/a.fa', \
+        run_name='test', hidden=512, d_steps = 10, max_examples=3000):
+        self.preds_cutoff = 1
         self.hidden = hidden
         self.batch_size = batch_size
         self.lr = lr
@@ -61,9 +62,9 @@ class WGAN_LangGP():
         print(self.D)
         self.G_optimizer = optim.Adam(self.G.parameters(), lr=self.lr, betas=(0.5, 0.9))
         self.D_optimizer = optim.Adam(self.D.parameters(), lr=self.lr, betas=(0.5, 0.9))
-        self.analyzer = ACPClassifier() #from PYTORCH
-        val_loss, val_acc = self.analyzer.evaluate_model()
-        print("Val Acc:{}".format(val_acc))
+        # self.analyzer = ACPClassifier() #from PYTORCH
+        # val_loss, val_acc = self.analyzer.evaluate_model()
+        # print("Val Acc:{}".format(val_acc))
 
     def load_data(self, datadir, max_examples=1e6):
         self.data, self.charmap, self.inv_charmap = utils.language_helpers.load_dataset(
@@ -126,6 +127,22 @@ class WGAN_LangGP():
         gradient_penalty = ((gradients.norm(2, dim=1).norm(2,dim=1) - 1) ** 2).mean() * self.lamda
         return gradient_penalty
 
+    def predict_model(self, input_seqs):
+        all_preds_hk, all_preds_dev = [],[]
+        with open("sample_out.txt", 'w+') as f:
+            f.writelines([">nolocation" +'\n' + s + '\n' for s in input_seqs]) # ???
+        # 调用DEEPSTARR
+        Deep_STARR_pred_new_sequence("sample_out.txt", "DeepSTARR.model")
+        i = 0
+        with open("sample_out.txt_predictions_DeepSTARR.model.txt",'r') as f:
+            for s in f:
+                i = i + 1
+                if(i <= 1):continue
+                s = str(s).split()
+                all_preds_hk.append(float(s[2]))
+                all_preds_dev.append(float(s[3]))
+        return all_preds_hk, all_preds_dev 
+
     def train_model(self, load_dir):
         self.load_model(load_dir)
         losses_f = open(self.checkpoint_dir + "losses.txt",'a+')
@@ -139,17 +156,29 @@ class WGAN_LangGP():
         table = np.arange(len(self.charmap)).reshape(-1, 1)
         one_hot = OneHotEncoder()
         one_hot.fit(table)
-        num_batches_sample = 15
+        num_batches_sample = 21
         n_batches = int(len(self.data)/self.batch_size)
         i = 0
         for epoch in range(1, self.n_epochs+1):
             if epoch % 2 == 0: self.save_model(epoch)
-            sampled_seqs = self.sample(num_batches_sample, epoch)
-            preds = self.analyzer.predict_model(sampled_seqs)
+            msg = 'In epoch {}'.format(epoch)
+            print(msg)
+            # sampled_seqs = self.sample(num_batches_sample, epoch)
+            # preds = self.analyzer.predict_model(sampled_seqs)
+            # with open(self.sample_dir + "sampled_{}_preds.txt".format(epoch), 'w+') as f:
+            #     f.writelines([s + '\t' + str(preds[j][0]) + '\n' for j, s in enumerate(sampled_seqs)])
+            # good_indices = (preds > self.preds_cutoff).nonzero()[0]
+            # pos_seqs = [list(sampled_seqs[i]) for i in good_indices]
+            sampled_seqs = self.sample(num_batches_sample, epoch) # 生成15组序列，每组64条
+            preds_hk, preds_dev = self.predict_model(sampled_seqs)
             with open(self.sample_dir + "sampled_{}_preds.txt".format(epoch), 'w+') as f:
-                f.writelines([s + '\t' + str(preds[j][0]) + '\n' for j, s in enumerate(sampled_seqs)])
-            good_indices = (preds > self.preds_cutoff).nonzero()[0]
-            pos_seqs = [list(sampled_seqs[i]) for i in good_indices]
+                f.writelines([s + '\t' + str(preds_hk[j]) + ' ' + str(preds_dev[j]) + '\n' for j, s in enumerate(sampled_seqs)])
+            good_indices = []
+            for j in range(len(preds_hk)):
+                if preds_dev[j] >  self.preds_cutoff: # self.preds_cutoff or preds_hk[j] >
+                    good_indices.append(j)
+            pos_seqs = [list(sampled_seqs[j]) for j in good_indices]
+
             print("Adding {} positive sequences".format(len(pos_seqs)))
             with open(self.checkpoint_dir + "positives.txt",'a+') as f:
                 f.write("Epoch: {} \t Pos: {}\n".format(epoch, len(pos_seqs)/float(len(sampled_seqs))))
@@ -174,12 +203,16 @@ class WGAN_LangGP():
                     self.D.zero_grad()
                     d_real_pred = self.D(real_data)
                     d_real_err = torch.mean(d_real_pred) #want to push d_real as high as possible
+#                     print(d_real_err)
+                    d_real_err = torch.reshape(d_real_err,(-1,))
+#                     print(d_real_err)
                     d_real_err.backward(one_neg)
 
                     z_input = to_var(torch.randn(self.batch_size, 128))
                     d_fake_data = self.G(z_input).detach()
                     d_fake_pred = self.D(d_fake_data)
                     d_fake_err = torch.mean(d_fake_pred) #want to push d_fake as low as possible
+                    d_fake_err = torch.reshape(d_fake_err,(-1,))
                     d_fake_err.backward(one)
 
                     gradient_penalty = self.calc_gradient_penalty(real_data.data, d_fake_data.data)
@@ -209,10 +242,10 @@ class WGAN_LangGP():
                 self.G_optimizer.step()
                 G_losses.append((g_err.data).cpu().numpy())
                 if i % 10 == 9:
-                    summary_str = 'Iteration {} - loss_d: {}, loss_g: {}, w_dist: {}, grad_penalty: {}'\
+                    summary_str = 'Iteration {} - loss_d: {}, loss_g: {}, w_dist: {}, grad_penalty: {}\n'\
                         .format(i, (d_err.data).cpu().numpy(),
                         (g_err.data).cpu().numpy(), ((d_real_err - d_fake_err).data).cpu().numpy(), gp_np)
-                    print(summary_str)
+                    print(summary_str,end="")
                     losses_f.write(summary_str)
                     plot_losses([G_losses, D_losses], ["gen", "disc"], self.sample_dir + "losses.png")
                     plot_losses([W_dist], ["w_dist"], self.sample_dir + "dist.png")

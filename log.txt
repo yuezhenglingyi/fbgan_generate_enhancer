@@ -1,0 +1,99 @@
+loading dataset...
+('A', 'A', 'C', 'T', 'T', 'C', 'C', 'A', 'A', 'C', 'C', 'G', 'C', 'A', 'A', 'G', 'C', 'A', 'T', 'T', 'G', 'T', 'A', 'A', 'A', 'A', 'G', 'G', 'A', 'A', 'C', 'A', 'G', 'T', 'G', 'A', 'C', 'T', 'C', 'G', 'C', 'A', 'G', 'T', 'C', 'G', 'C', 'T', 'T', 'A', 'A', 'A', 'A', 'A', 'G', 'T', 'T', 'T', 'C', 'A', 'A', 'A', 'A', 'C', 'T', 'A', 'T', 'C', 'A', 'T', 'A', 'A', 'C', 'A', 'T', 'A', 'G', 'A', 'A', 'A', 'A', 'A', 'T', 'T', 'T', 'C', 'A', 'A', 'G', 'C', 'A', 'T', 'T', 'T', 'A', 'T', 'A', 'C', 'G', 'T', 'A', 'T', 'T', 'A', 'A', 'A', 'A', 'G', 'C', 'A', 'G', 'C', 'A', 'A', 'A', 'C', 'C', 'A', 'A', 'A', 'C', 'G', 'T', 'T', 'T', 'A', 'A', 'A', 'T', 'A', 'G', 'A', 'T', 'T', 'T', 'A', 'A', 'A', 'T', 'A', 'T', 'A', 'C', 'G', 'C', 'A', 'C', 'A', 'T', 'A', 'T', 'T', 'T', 'A', 'A', 'A', 'A', 'G', 'C', 'A', 'C', 'T', 'T', 'T', 'T', 'C', 'A', 'A', 'T', 'A', 'G', 'A', 'T', 'C', 'T', 'G', 'A', 'A', 'A', 'C', 'C', 'A', 'G', 'T', 'G', 'T', 'G', 'C', 'A', 'G', 'G', 'G', 'C', 'A', 'T', 'C', 'G', 'C', 'T', 'T', 'C', 'A', 'G', 'T', 'T', 'G', 'G', 'T', 'C', 'T', 'T', 'C', 'G', 'G', 'T', 'T', 'T', 'C', 'A', 'G', 'T', 'G', 'A', 'C', 'T', 'G', 'T', 'G', 'A', 'C', 'T', 'G', 'T', 'G', 'A', 'C', 'A', 'G', 'T', 'G', 'A', 'C', 'A', 'G', 'T', 'T', 'G', 'T', 'C')
+loaded 401984 lines in dataset
+Generator_lang(
+  (fc1): Linear(in_features=128, out_features=127488, bias=True)
+  (block): Sequential(
+    (0): ResBlock(
+      (res_block): Sequential(
+        (0): ReLU(inplace=True)
+        (1): Conv1d(512, 512, kernel_size=(5,), stride=(1,), padding=(2,))
+        (2): ReLU(inplace=True)
+        (3): Conv1d(512, 512, kernel_size=(5,), stride=(1,), padding=(2,))
+      )
+    )
+    (1): ResBlock(
+      (res_block): Sequential(
+        (0): ReLU(inplace=True)
+        (1): Conv1d(512, 512, kernel_size=(5,), stride=(1,), padding=(2,))
+        (2): ReLU(inplace=True)
+        (3): Conv1d(512, 512, kernel_size=(5,), stride=(1,), padding=(2,))
+      )
+    )
+    (2): ResBlock(
+      (res_block): Sequential(
+        (0): ReLU(inplace=True)
+        (1): Conv1d(512, 512, kernel_size=(5,), stride=(1,), padding=(2,))
+        (2): ReLU(inplace=True)
+        (3): Conv1d(512, 512, kernel_size=(5,), stride=(1,), padding=(2,))
+      )
+    )
+    (3): ResBlock(
+      (res_block): Sequential(
+        (0): ReLU(inplace=True)
+        (1): Conv1d(512, 512, kernel_size=(5,), stride=(1,), padding=(2,))
+        (2): ReLU(inplace=True)
+        (3): Conv1d(512, 512, kernel_size=(5,), stride=(1,), padding=(2,))
+      )
+    )
+    (4): ResBlock(
+      (res_block): Sequential(
+        (0): ReLU(inplace=True)
+        (1): Conv1d(512, 512, kernel_size=(5,), stride=(1,), padding=(2,))
+        (2): ReLU(inplace=True)
+        (3): Conv1d(512, 512, kernel_size=(5,), stride=(1,), padding=(2,))
+      )
+    )
+  )
+  (conv1): Conv1d(512, 5, kernel_size=(1,), stride=(1,))
+)
+Discriminator_lang(
+  (block): Sequential(
+    (0): ResBlock(
+      (res_block): Sequential(
+        (0): ReLU(inplace=True)
+        (1): Conv1d(512, 512, kernel_size=(5,), stride=(1,), padding=(2,))
+        (2): ReLU(inplace=True)
+        (3): Conv1d(512, 512, kernel_size=(5,), stride=(1,), padding=(2,))
+      )
+    )
+    (1): ResBlock(
+      (res_block): Sequential(
+        (0): ReLU(inplace=True)
+        (1): Conv1d(512, 512, kernel_size=(5,), stride=(1,), padding=(2,))
+        (2): ReLU(inplace=True)
+        (3): Conv1d(512, 512, kernel_size=(5,), stride=(1,), padding=(2,))
+      )
+    )
+    (2): ResBlock(
+      (res_block): Sequential(
+        (0): ReLU(inplace=True)
+        (1): Conv1d(512, 512, kernel_size=(5,), stride=(1,), padding=(2,))
+        (2): ReLU(inplace=True)
+        (3): Conv1d(512, 512, kernel_size=(5,), stride=(1,), padding=(2,))
+      )
+    )
+    (3): ResBlock(
+      (res_block): Sequential(
+        (0): ReLU(inplace=True)
+        (1): Conv1d(512, 512, kernel_size=(5,), stride=(1,), padding=(2,))
+        (2): ReLU(inplace=True)
+        (3): Conv1d(512, 512, kernel_size=(5,), stride=(1,), padding=(2,))
+      )
+    )
+    (4): ResBlock(
+      (res_block): Sequential(
+        (0): ReLU(inplace=True)
+        (1): Conv1d(512, 512, kernel_size=(5,), stride=(1,), padding=(2,))
+        (2): ReLU(inplace=True)
+        (3): Conv1d(512, 512, kernel_size=(5,), stride=(1,), padding=(2,))
+      )
+    )
+  )
+  (conv1d): Conv1d(5, 512, kernel_size=(1,), stride=(1,))
+  (linear): Linear(in_features=127488, out_features=1, bias=True)
+)
+[*] Checkpoint 53999 found at ./checkpoint/realProt_50aa/!
+In epoch 0,n_batches is 1570,but total_iterations is4000
+Iteration [9/4000] - loss_d: -6.192789077758789, loss_g: -5.236035346984863, w_dist: 7.196483612060547, grad_penalty: 1.0036945343017578
+Iteration [19/4000] - loss_d: -9.387372970581055, loss_g: -3.5275936126708984, w_dist: 11.113780975341797, grad_penalty: 1.726407766342163

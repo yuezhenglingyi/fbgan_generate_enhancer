@@ -31,7 +31,7 @@ import numpy as np
 from models import *
 
 class WGAN_LangGP():
-    def __init__(self, batch_size=64, lr=0.0001, num_epochs=80, seq_len = 156, data_dir='./data/random_dna_seqs.fa', \
+    def __init__(self, batch_size=256, lr=0.0001, num_epochs=80, seq_len = 249, data_dir='./data/a.fa', \
         run_name='test', hidden=512, d_steps = 10):
         self.hidden = hidden
         self.batch_size = batch_size
@@ -162,6 +162,8 @@ class WGAN_LangGP():
         counter = 0
         for epoch in range(self.n_epochs):
             n_batches = int(len(self.data)/self.batch_size)
+            msg = 'In epoch {},n_batches is {},but total_iterations is{}'.format(epoch,n_batches,total_iterations)
+            print(msg)
             for idx in range(n_batches):
                 _data = np.array(
                     [[self.charmap[c] for c in l] for l in self.data[idx*self.batch_size:(idx+1)*self.batch_size]],
@@ -179,20 +181,21 @@ class WGAN_LangGP():
                 grad_penalties.append(gp_np)
                 d_real_losses.append(d_real_np)
                 d_fake_losses.append(d_fake_np)
+                
                 D_losses.append(d_fake_np - d_real_np + gp_np)
                 W_dist.append(d_real_np - d_fake_np)
-
+                i=counter
                 if counter % self.d_steps == 0:
                     g_err = self.gen_train_iteration()
                     G_losses.append((g_err.data).cpu().numpy())
 
-                if counter % 100 == 99:
+                if counter % 1000 == 999:
                     self.save_model(i)
                     self.sample(i)
                 if counter % 10 == 9:
                     summary_str = 'Iteration [{}/{}] - loss_d: {}, loss_g: {}, w_dist: {}, grad_penalty: {}'\
-                        .format(i, total_iterations, (d_err.data).cpu().numpy(),
-                        (g_err.data).cpu().numpy(), ((d_real_err - d_fake_err).data).cpu().numpy(), gp_np)
+                        .format(i, total_iterations, ((d_fake_err - d_real_err + gradient_penalty)).cpu().numpy(),
+                        (d_fake_err).cpu().numpy(), ((d_real_err - d_fake_err).data).cpu().numpy(), gp_np)
                     print(summary_str)
                     losses_f.write(summary_str)
                     plot_losses([G_losses, D_losses], ["gen", "disc"], self.sample_dir + "losses.png")
@@ -200,6 +203,8 @@ class WGAN_LangGP():
                     plot_losses([grad_penalties],["grad_penalties"], self.sample_dir + "grad.png")
                     plot_losses([d_fake_losses, d_real_losses],["d_fake", "d_real"], self.sample_dir + "d_loss_components.png")
                 counter += 1
+                if counter == total_iterations:
+                    break
             np.random.shuffle(self.data)
 
     def sample(self, epoch):
@@ -216,7 +221,7 @@ def main():
     parser = argparse.ArgumentParser(description='WGAN-GP for producing gene sequences.')
     parser.add_argument("--run_name", default= "realProt_50aa", help="Name for output files (checkpoint and sample dir)")
     parser.add_argument("--load_dir", default="", help="Option to load checkpoint from other model (Defaults to run name)")
-    args = parser.parse_args()
+    args = parser.parse_args(args=[])
     model = WGAN_LangGP(run_name=args.run_name)
     model.train_model(args.load_dir)
 
